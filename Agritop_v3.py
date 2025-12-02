@@ -16,9 +16,7 @@ Observações:
 - O script normaliza cabeçalhos para snake_case no início (função normalize_df_cols),
   então todas as referências internas usam nomes normalizados.
 - Cores do tema definidas conforme solicitação do usuário.
-"""
-
-from datetime import datetime
+"""from datetime import datetime
 from pathlib import Path
 import zipfile
 import io
@@ -29,12 +27,57 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 
-# ----------------------------
-# Configs e caminhos
-# ----------------------------
-DEFAULT_MAIN = Path(r"Y:\GERENCIA\BR_DOLS_OPER_ATEX\NP-1\29 - Atendimento Logístico\L3\Ciclo do Pedido\Extrato Analitico.xlsx")
-DEFAULT_BLOQ = Path(r"Y:\GERENCIA\BR_DOLS_OPER_ATEX\NP-1\29 - Atendimento Logístico\L3\Ciclo do Pedido\Pedidos Bloqueados.xlsx")
-DEFAULT_OTIF = Path(r"Y:\GERENCIA\BR_DOLS_OPER_ATEX\NP-1\29 - Atendimento Logístico\L3\Ciclo do Pedido\OTIF.xlsx")
+# ---------------------------------------------------------
+# Caminhos relativos para rodar no GitHub + Streamlit Cloud
+# ---------------------------------------------------------
+DATA_DIR = Path("data")
+
+DEFAULT_MAIN = DATA_DIR / "Extrato Analitico.xlsx"
+DEFAULT_BLOQ = DATA_DIR / "Pedidos Bloqueados.xlsx"
+DEFAULT_OTIF = DATA_DIR / "OTIF.xlsx"
+
+PRIORITY_MATERIALS = ["VIBRA  AGRITOP", "Vibra Diesel Off-Road"]
+
+
+# ---------------------------------------------------------
+# Função genérica para carregar arquivos
+# 1) Tenta ler do repositório (pasta /data)
+# 2) Se não existir, solicita upload no Streamlit
+# ---------------------------------------------------------
+def load_excel_or_upload(label: str, default_path: Path):
+    """
+    Tenta carregar o arquivo do caminho relativo no repositório.
+    Se não existir, solicita upload.
+    """
+    if default_path.exists():
+        st.success(f"{label}: carregado do repositório ({default_path})")
+        return pd.read_excel(default_path)
+
+    st.warning(f"{label} não encontrado no repositório. Faça upload do arquivo.")
+    uploaded = st.file_uploader(f"Envie o arquivo: {label}", type=["xlsx"], key=str(default_path))
+
+    if uploaded:
+        st.success(f"{label}: carregado via upload.")
+        return pd.read_excel(uploaded)
+
+    return None
+
+
+# ---------------------------------------------------------
+# Carregamento dos arquivos principais
+# ---------------------------------------------------------
+st.header("Dashboard — Ciclo do Pedido (Agritop / Vibra Diesel)")
+
+df_main = load_excel_or_upload("Extrato Analítico", DEFAULT_MAIN)
+df_bloq = load_excel_or_upload("Pedidos Bloqueados", DEFAULT_BLOQ)
+df_otif = load_excel_or_upload("OTIF", DEFAULT_OTIF)
+
+if df_main is None or df_bloq is None or df_otif is None:
+    st.stop()
+
+# -----------------------------
+# Seu código continua daqui ↓↓↓
+# -----------------------------
 
 PRIORITY_MATERIALS = ["VIBRA  AGRITOP", "Vibra Diesel Off-Road"]
 
@@ -655,3 +698,4 @@ st.markdown("""
 - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
 - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
 """)
+
