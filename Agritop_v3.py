@@ -67,14 +67,14 @@ def load_excel_or_upload(label: str, default_path: Path):
 # ---------------------------------------------------------
 # Carregamento dos arquivos principais
 # ---------------------------------------------------------
-st.header("Dashboard — Ciclo do Pedido (Agritop / Vibra Diesel)")
+# st.header("Dashboard — Ciclo do Pedido (Agritop / Vibra Diesel)")
 
-df_main = load_excel_or_upload("Extrato Analítico", DEFAULT_MAIN)
-df_bloq = load_excel_or_upload("Pedidos Bloqueados", DEFAULT_BLOQ)
-df_otif = load_excel_or_upload("OTIF", DEFAULT_OTIF)
+# df_main = load_excel_or_upload("Extrato Analítico", DEFAULT_MAIN)
+# df_bloq = load_excel_or_upload("Pedidos Bloqueados", DEFAULT_BLOQ)
+# df_otif = load_excel_or_upload("OTIF", DEFAULT_OTIF)
 
-if df_main is None or df_bloq is None or df_otif is None:
-    st.stop()
+# if df_main is None or df_bloq is None or df_otif is None:
+#     st.stop()
 
 # -----------------------------
 # Seu código continua daqui ↓↓↓
@@ -699,5 +699,6 @@ st.markdown("""
 - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
 - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
 """)
+
 
 
