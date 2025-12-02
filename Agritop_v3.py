@@ -16,7 +16,8 @@ Observações:
 - O script normaliza cabeçalhos para snake_case no início (função normalize_df_cols),
   então todas as referências internas usam nomes normalizados.
 - Cores do tema definidas conforme solicitação do usuário.
-"""from datetime import datetime
+"""
+from datetime import datetime
 from pathlib import Path
 import zipfile
 import io
@@ -698,4 +699,5 @@ st.markdown("""
 - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
 - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
 """)
+
 
