@@ -375,7 +375,7 @@ if data_remessa_col:
     anos_disponiveis = sorted([int(a) for a in anos_disponiveis])
 
     ano_selecionado = st.selectbox(
-        "Ano da Remessa",
+        "Ano",
         options=anos_disponiveis,
         index=len(anos_disponiveis) - 1
     )
@@ -402,7 +402,7 @@ if data_remessa_col:
     meses_legiveis = [f"{m:02d} - {nome_meses[m]}" for m in meses_disponiveis]
 
     seletor_mes = st.selectbox(
-        "Mês da Remessa",
+        "Mês",
         options=meses_legiveis,
         index=len(meses_legiveis) - 1
     )
@@ -766,6 +766,7 @@ with aba1:
     - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     """)
+
 
 
 
