@@ -519,27 +519,47 @@ else:
     k3.metric("OVs Atendidas OTIF", total_otif)
 
     # TENDÊNCIA OTIF por dia (se data disponível)
-    date_col_candidates = [c for c in df_otif_merge.columns if 'data_prevista_entrega' in c.lower() or 'data_prevista' in c.lower()]
-    date_col = date_col_candidates[0] if date_col_candidates else None
-    if date_col:
-        tmp = df_otif_merge.copy()
-        tmp[date_col] = pd.to_datetime(tmp[date_col], errors='coerce')
-        tmp['dia'] = tmp[date_col].dt.date
+    date_col_candidates = [
+    c for c in df_otif_merge.columns
+    if 'data_prevista_entrega' in c.lower() or 'data_prevista' in c.lower()
+]
+date_col = date_col_candidates[0] if date_col_candidates else None
 
-        trend = (
-            tmp.groupby(['dia', 'ordem_de_venda'])['otif_atendido']
-            .min()
-            .reset_index()
-            .groupby('dia')
-            .agg(total_ovs=('ordem_de_venda', 'nunique'), ov_atendidas=('otif_atendido', 'sum'))
-            .reset_index()
+if date_col:
+    tmp = df_otif_merge.copy()
+    tmp[date_col] = pd.to_datetime(tmp[date_col], errors='coerce')
+    tmp['dia'] = tmp[date_col].dt.date
+
+    trend = (
+        tmp.groupby(['dia', 'ordem_de_venda'])['otif_atendido']
+        .min()
+        .reset_index()
+        .groupby('dia')
+        .agg(
+            total_ovs=('ordem_de_venda', 'nunique'),
+            ov_atendidas=('otif_atendido', 'sum')
         )
-        if not trend.empty:
-            trend['percentual'] = (trend['ov_atendidas'] / trend['total_ovs']) * 100
-            fig_trend_otif = px.line(trend, x='dia', y='percentual', markers=True, title='Evolução OTIF por Dia (Exceto Agritop / Off Road)')
-            fig_trend_otif.update_traces(line=dict(color=COLORS['verde_escuro']))
-            st.plotly_chart(fig_trend_otif, use_container_width=True)
+        .reset_index()
+    )
 
+    if not trend.empty:
+        trend['percentual'] = (trend['ov_atendidas'] / trend['total_ovs']) * 100
+
+        # Cria gráfico de linha com rótulos visíveis
+        fig_trend_otif = px.line(
+            trend,
+            x='dia',
+            y='percentual',
+            markers=True,
+            text=trend['percentual'].round(2),  # rótulos dos pontos
+            title='Evolução OTIF por Dia (Exceto Agritop / Off Road)'
+        )
+        fig_trend_otif.update_traces(
+            line=dict(color=COLORS['verde_escuro']),
+            textposition='top center'  # posição dos rótulos
+        )
+
+        st.plotly_chart(fig_trend_otif, use_container_width=True)
     # -----------------------------
     # Preparar df_view (usado para Top5, pizza e tabela)
     # -----------------------------
@@ -564,34 +584,52 @@ else:
     # Top 5 clientes — agregação por codigo_emissor
     # -----------------------------
     # garantir coluna do codigo emissor existe
-    if client_col not in df_view.columns:
-        st.error(f"Coluna de cliente ({client_col}) ausente no conjunto filtrado.")
+PRIORITY_MATERIALS = ["VIBRA  AGRITOP", "Vibra Diesel Off-Road"]
+
+# Verifica se existe a coluna de cliente
+if client_col not in df_view.columns:
+    st.error(f"Coluna de cliente ({client_col}) ausente no conjunto filtrado.")
+else:
+
+    # 1) Filtrar DF antes de qualquer agregação, removendo materiais indesejados
+    if "material" in df_view.columns:
+        df_view_filtrado = df_view[~df_view["material"].isin(PRIORITY_MATERIALS)].copy()
     else:
-        df_agg_clientes = (
-            df_view.groupby(client_col)
-            .agg(
-                pedidos_total=('ordem_de_venda', 'nunique'),
-                pedidos_etanol=('tipo_combustivel', lambda x: (x == 'Etanol').sum()),
-                pedidos_gasolina=('tipo_combustivel', lambda x: (x == 'Gasolina').sum()),
-                pedidos_diesel=('tipo_combustivel', lambda x: (x == 'Diesel').sum()),
-                otif_atendido_pct=('otif_atendido', 'mean')
-            )
-            .reset_index()
-        )
+        st.warning("Coluna 'material' não encontrada. Nenhum filtro de PRIORITY_MATERIALS aplicado.")
+        df_view_filtrado = df_view.copy()
 
-        df_top5 = df_agg_clientes.sort_values('pedidos_total', ascending=False).head(5)
+    # 2) Agregação por cliente
+    df_agg_clientes = (
+    df_view_filtrado.groupby(client_col)
+    .agg(
+        cliente_nome=('cliente_nome', 'first'),  # pega o primeiro nome do cliente
+        pedidos_total=('ordem_de_venda', 'count'),  # cada linha = 1 pedido
+        pedidos_etanol=('tipo_combustivel', lambda x: x.str.contains('Etanol', case=False).sum()),
+        pedidos_gasolina=('tipo_combustivel', lambda x: x.str.contains('Gasolina', case=False).sum()),
+        pedidos_diesel=('tipo_combustivel', lambda x: x.str.contains('Diesel', case=False).sum()),
+        per_otif_atendido=('otif_atendido', 'mean')
+    )
+    .reset_index()
+)
+        # 3) Top 5
+    df_top5 = df_agg_clientes.sort_values('pedidos_total', ascending=False).head(5)
 
-        st.subheader('Top 5 clientes — Pedidos (Exceto Agritop / Off Road)')
-        # formatar percentuais
-        df_top5['otif_atendido_pct'] = (df_top5['otif_atendido_pct'] * 100).round(2)
-        st.dataframe(df_top5.style.format({
+    st.subheader('Top 5 clientes — Pedidos (Exceto Agritop / Off Road)')
+
+    # 4) Formatar percentuais
+    df_top5['per_otif_atendido'] = (df_top5['per_otif_atendido'] * 100).round(2)
+
+    # Exibir tabela
+    st.dataframe(
+        df_top5.style.format({
             'pedidos_total': '{:,.0f}',
             'pedidos_etanol': '{:,.0f}',
             'pedidos_gasolina': '{:,.0f}',
             'pedidos_diesel': '{:,.0f}',
-            'otif_atendido_pct': '{:.2f}%'
-        }), use_container_width=True)
-
+            'per_otif_atendido': '{:.2f}%'
+        }),
+        use_container_width=True
+)
     # -----------------------------
     # Pizza de materiais (somente não prioritários)
     # -----------------------------
@@ -600,105 +638,112 @@ else:
     fig_pie = px.pie(pie, names='tipo_combustivel', values='qtd', title='Distribuição por Material (Exceto Agritop / Off Road)', hole=0.4, color_discrete_sequence=[COLORS['verde_escuro'], COLORS['verde_claro'], COLORS['amarelo'], COLORS['azul']])
     st.plotly_chart(fig_pie, use_container_width=True)
 
-#     # -----------------------------
-#     # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_view
-#     # -----------------------------
-#     total_clientes = df_view[client_col].nunique()
-#     total_ov_view = df_view['ordem_de_venda'].nunique()
-#     perc_otif_view = df_view['otif_atendido'].mean() * 100 if len(df_view) > 0 else 0
+    st.header("Visão Operacional — Produtos Claros")   
 
-#     kc1, kc2, kc3 = st.columns(3)
-#     kc1.metric('Clientes prioritários (distintos)', int(total_clientes))
-#     kc2.metric('Total de Ordens de Venda (não prioritárias)', int(total_ov_view))
-#     kc3.metric('OTIF (%)', f"{perc_otif_view:,.2f}%")
+    # -----------------------------
+    # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_view
+    # -----------------------------
+    # Contagem de clientes prioritários (qualquer pedido de material prioritário)
+    total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
 
-#     # -----------------------------
-#     # Filtros: Base e Diretoria N2
-#     # -----------------------------
-#     st.subheader('Filtros')
-#     f1, f2 = st.columns(2)
-#     base_col = next((c for c in df_view.columns if 'base' == c or 'base' in c.lower()), None)
-#     dir_n2_col = n2_col
+    # Total de ordens de venda e OTIF continuam usando df_view filtrado
+    total_ov_view = df_view['ordem_de_venda'].nunique()
+    perc_otif_view = df_view['otif_atendido'].mean() * 100 if len(df_view) > 0 else 0
 
-#     sel_base = None
-#     sel_n2 = None
-#     df_filtered = df_view.copy()
-#     if base_col is not None:
-#         sel_base = f1.multiselect('Base', options=sorted(df_view[base_col].dropna().unique().tolist()), default=None)
-#         if sel_base:
-#             df_filtered = df_filtered[df_filtered[base_col].isin(sel_base)]
-#     if dir_n2_col is not None:
-#         sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_view[dir_n2_col].dropna().unique().tolist()), default=None)
-#         if sel_n2:
-#             df_filtered = df_filtered[df_filtered[dir_n2_col].isin(sel_n2)]
+    # Exibir métricas
+    kc1, kc2, kc3 = st.columns(3)
+    kc1.metric('Clientes Agritop / Off Road', int(total_clientes_prioritarios))
+    kc2.metric('Total de Ordens de Venda (Exceto Agritop / Off Road)', int(total_ov_view))
+    kc3.metric('OTIF (%)', f"{perc_otif_view:,.2f}%")
 
-#     # -----------------------------
-#     # Tabela final com colunas solicitadas
-#     # -----------------------------
-#     st.subheader('Tabela filtrada — Prioritários (Exceto Agritop / Off Road)')
+    # -----------------------------
+    # Filtros: Base e Diretoria N2
+    # -----------------------------
+    st.subheader('Filtros')
+    f1, f2 = st.columns(2)
+    base_col = next((c for c in df_view.columns if 'base' == c or 'base' in c.lower()), None)
+    dir_n2_col = n2_col
 
-#     cols_to_show = [client_col]
-#     if razao_col:
-#         cols_to_show.append(razao_col)
-#     cols_to_show += ['ordem_de_venda', material_col, 'status_check']
+    sel_base = None
+    sel_n2 = None
+    df_filtered = df_view.copy()
+    if base_col is not None:
+        sel_base = f1.multiselect('Base', options=sorted(df_view[base_col].dropna().unique().tolist()), default=None)
+        if sel_base:
+            df_filtered = df_filtered[df_filtered[base_col].isin(sel_base)]
+    if dir_n2_col is not None:
+        sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_view[dir_n2_col].dropna().unique().tolist()), default=None)
+        if sel_n2:
+            df_filtered = df_filtered[df_filtered[dir_n2_col].isin(sel_n2)]
 
-#     # proteger se colausente
-#     cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
+    # -----------------------------
+    # Tabela final com colunas solicitadas
+    # -----------------------------
+    st.subheader('Tabela filtrada — Prioritários (Exceto Agritop / Off Road)')
 
-#     st.dataframe(df_filtered[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
+    cols_to_show = [client_col]
+    if razao_col:
+        cols_to_show.append(razao_col)
+    cols_to_show += ['ordem_de_venda', material_col, 'status_check']
 
-# # ----------------------------
-# # Distribuição por status (global)
-# # ----------------------------
-# st.subheader('Distribuição por Status Check')
-# fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
-# st.plotly_chart(fig_status, use_container_width=True)
+    # proteger se colausente
+    cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
 
-# # ----------------------------
-# # Tabela completa e Export
-# # ----------------------------
-# st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
-# statuses = df_prior['status_check'].dropna().unique().tolist()
-# sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
-# sel_base_tbl = None
-# if 'base' in df_prior.columns:
-#     sel_base_tbl = st.multiselect('Base (tabela)', options=sorted(df_prior['base'].dropna().unique().tolist()), default=None)
+    st.dataframe(df_filtered[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
 
-# # preparar df_view for table
+# ----------------------------
+# Distribuição por status (global)
+# ----------------------------
+st.subheader('Distribuição por Status Check')
+fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
+st.plotly_chart(fig_status, use_container_width=True)
 
-# df_table = df_prior.copy()
-# if sel_status:
-#     df_table = df_table[df_table['status_check'].isin(sel_status)]
-# if sel_base_tbl:
-#     df_table = df_table[df_table['base'].isin(sel_base_tbl)]
+# ----------------------------
+# Tabela completa e Export
+# ----------------------------
+st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
+statuses = df_prior['status_check'].dropna().unique().tolist()
+sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
+sel_base_tbl = None
+if 'base' in df_prior.columns:
+    sel_base_tbl = st.multiselect('Base (tabela)', options=sorted(df_prior['base'].dropna().unique().tolist()), default=None)
 
-# default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
-# show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
-# st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
+# preparar df_view for table
 
-# # Export
-# st.subheader('Exportar resultados')
-# if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
-#     written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
-#     if written:
-#         st.success(f"{len(written)} arquivos gerados.")
-#         zip_buf = make_zip(written)
-#         st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
-#     else:
-#         st.warning('Nenhum arquivo foi escrito.')
+df_table = df_prior.copy()
+if sel_status:
+    df_table = df_table[df_table['status_check'].isin(sel_status)]
+if sel_base_tbl:
+    df_table = df_table[df_table['base'].isin(sel_base_tbl)]
 
-# # download consolidado
-# to_xlsx = io.BytesIO()
-# with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
-#     df_table.to_excel(writer, sheet_name='prioritarios', index=False)
-# to_xlsx.seek(0)
-# st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
+show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
+st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
+
+# Export
+st.subheader('Exportar resultados')
+if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
+    written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
+    if written:
+        st.success(f"{len(written)} arquivos gerados.")
+        zip_buf = make_zip(written)
+        st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
+    else:
+        st.warning('Nenhum arquivo foi escrito.')
+
+# download consolidado
+to_xlsx = io.BytesIO()
+with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
+    df_table.to_excel(writer, sheet_name='prioritarios', index=False)
+to_xlsx.seek(0)
+st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 st.markdown("""
 **Observações**
 - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
 - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
 """)
+
 
 
 
