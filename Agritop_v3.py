@@ -761,20 +761,20 @@ with col1:
       pie1 = pd.DataFrame({
       "categoria": ["Prioritários", "Demais"],
       "quantidade": [total_pedidos_priority, total_pedidos_nonpriority]
-  })
+    })
   
-  custom_colors = ["#044317", "#268200"]
-  
-  fig1 = px.pie(
-      pie1,
-      names="categoria",
-      values="quantidade",
-      title="Prioritários × Demais",
-      color="categoria",
-      color_discrete_sequence=custom_colors
-  )
-  
-  st.plotly_chart(fig1, use_container_width=True)
+    custom_colors = ["#044317", "#268200"]
+    
+    fig1 = px.pie(
+        pie1,
+        names="categoria",
+        values="quantidade",
+        title="Prioritários × Demais",
+        color="categoria",
+        color_discrete_sequence=custom_colors
+    )
+    
+    st.plotly_chart(fig1, use_container_width=True)
 
 
 # ============================
@@ -914,6 +914,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
