@@ -477,7 +477,7 @@ df_prior.sort_values(by=[sap_col, 'ordem_de_venda'], inplace=True, na_position='
 aba1, aba2 = st.tabs(["📊 Visão Gerencial", "⚙️ Visão Operacional"])
 
 with aba1:
-    st.header("Visão Gerencial — Produtos Claros")
+    st.header("Visão Gerencial — Produtos Claros & Lubs")
 
     df_viz = df_prior.copy()
     # 1. Encontrar coluna de ofensor no df_otif
@@ -790,11 +790,15 @@ with col2:
     pie2 = df_np["tipo_combustivel"].value_counts().reset_index()
     pie2.columns = ["categoria", "quantidade"]
 
+    custom_colors = ["#044317", "#268200"]
+
     fig2 = px.pie(
         pie2,
         names="categoria",
         values="quantidade",
         title="Distribuição — Demais Materiais"
+        color="categoria",  # importantíssimo
+      color_discrete_sequence=custom_colors
     )
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -905,6 +909,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
