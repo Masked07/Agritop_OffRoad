@@ -772,7 +772,7 @@ with col1:
         title="Prioritários × Demais",
         color="categoria",  # importantíssimo
         color_discrete_sequence=custom_colors
-    )
+    
     st.plotly
     )
     st.plotly_chart(fig1, use_container_width=True)
@@ -915,6 +915,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
