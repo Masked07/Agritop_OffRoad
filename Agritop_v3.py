@@ -729,13 +729,13 @@ with aba1:
             display_cols = {
                 'codigo_sap': 'Código',
                 'cliente_nome': 'Cliente',
-                'qtd_prioritarios': 'AGRITOP',
+                'qtd_prioritarios': 'Agritop',
+                'otif_agr': 'OTIF Agritop',
                 'qtd_etanol': 'Etanol',
                 'qtd_gasolina': 'Gasolina',
                 'qtd_diesel': 'Diesel',
-                'qtd_lubrificantes': 'Lubs',
-                'otif_agr': 'OTIF AGRITOP',
                 'otif_nonprio': 'OTIF D. produtos',
+                'qtd_lubrificantes': 'Lubs',
                 'otif_lub': 'OTIF Lubs'
             }
             # aplicar renome
@@ -914,6 +914,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
