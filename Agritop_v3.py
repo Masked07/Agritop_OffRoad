@@ -352,67 +352,67 @@ df_main[material_col] = (
 # marcar materiais prioritários
 df_main['is_priority_material'] = df_main[material_col].isin([m.upper() for m in PRIORITY_MATERIALS])
 
-# ===========================
-# SEGMENTAÇÃO POR ANO E MÊS
-# ===========================
+# # ===========================
+# # SEGMENTAÇÃO POR ANO E MÊS
+# # ===========================
 
-# Detectar coluna de data de remessa
-remessa_candidates = [c for c in df_main.columns if 'remessa' in c.lower()]
-data_remessa_col = remessa_candidates[0] if remessa_candidates else None
+# # Detectar coluna de data de remessa
+# remessa_candidates = [c for c in df_main.columns if 'remessa' in c.lower()]
+# data_remessa_col = remessa_candidates[0] if remessa_candidates else None
 
-if data_remessa_col:
-    # Garantir tipo datetime
-    df_main[data_remessa_col] = pd.to_datetime(df_main[data_remessa_col], errors='coerce')
+# if data_remessa_col:
+#     # Garantir tipo datetime
+#     df_main[data_remessa_col] = pd.to_datetime(df_main[data_remessa_col], errors='coerce')
 
-    # ===== FILTRO POR ANO =====
-    anos_disponiveis = (
-        df_main[data_remessa_col]
-        .dt.year
-        .dropna()
-        .unique()
-        .tolist()
-    )
-    anos_disponiveis = sorted([int(a) for a in anos_disponiveis])
+#     # ===== FILTRO POR ANO =====
+#     anos_disponiveis = (
+#         df_main[data_remessa_col]
+#         .dt.year
+#         .dropna()
+#         .unique()
+#         .tolist()
+#     )
+#     anos_disponiveis = sorted([int(a) for a in anos_disponiveis])
 
-    ano_selecionado = st.selectbox(
-        "Ano",
-        options=anos_disponiveis,
-        index=len(anos_disponiveis) - 1
-    )
+#     ano_selecionado = st.selectbox(
+#         "Ano",
+#         options=anos_disponiveis,
+#         index=len(anos_disponiveis) - 1
+#     )
 
-    df_main = df_main[df_main[data_remessa_col].dt.year == ano_selecionado]
+#     df_main = df_main[df_main[data_remessa_col].dt.year == ano_selecionado]
 
-    # ===== FILTRO POR MÊS =====
-    meses_disponiveis = (
-        df_main[data_remessa_col]
-        .dt.month
-        .dropna()
-        .unique()
-        .tolist()
-    )
-    meses_disponiveis = sorted([int(m) for m in meses_disponiveis])
+#     # ===== FILTRO POR MÊS =====
+#     meses_disponiveis = (
+#         df_main[data_remessa_col]
+#         .dt.month
+#         .dropna()
+#         .unique()
+#         .tolist()
+#     )
+#     meses_disponiveis = sorted([int(m) for m in meses_disponiveis])
 
-    # Dicionário para nome dos meses
-    nome_meses = {
-        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
-        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
-        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
-    }
+#     # Dicionário para nome dos meses
+#     nome_meses = {
+#         1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+#         5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+#         9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+#     }
 
-    meses_legiveis = [f"{m:02d} - {nome_meses[m]}" for m in meses_disponiveis]
+#     meses_legiveis = [f"{m:02d} - {nome_meses[m]}" for m in meses_disponiveis]
 
-    seletor_mes = st.selectbox(
-        "Mês",
-        options=meses_legiveis,
-        index=len(meses_legiveis) - 1
-    )
+#     seletor_mes = st.selectbox(
+#         "Mês",
+#         options=meses_legiveis,
+#         index=len(meses_legiveis) - 1
+#     )
 
-    mes_selecionado = int(seletor_mes.split(" - ")[0])
+#     mes_selecionado = int(seletor_mes.split(" - ")[0])
 
-    df_main = df_main[df_main[data_remessa_col].dt.month == mes_selecionado]
+#     df_main = df_main[df_main[data_remessa_col].dt.month == mes_selecionado]
 
-else:
-    st.warning("Coluna 'data de remessa' não encontrada para os filtros de ano/mês.")
+# else:
+#     st.warning("Coluna 'data de remessa' não encontrada para os filtros de ano/mês.")
 
 # === Cliente: usar somente coluna codigo_do_emissor (detectada automaticamente) ===
 client_candidates = [c for c in df_main.columns if "codigo_do_emissor" in c.lower() or "codigo_do_emissor" == c]
@@ -842,6 +842,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
