@@ -514,7 +514,12 @@ with aba1:
         df_viz[ofensor_col] = cleaned_ofensor
 
         # regra de OTIF atendido
-        df_viz["otif_atendido"] = cleaned_ofensor.str.lower().str.contains('otif atendido', na=False)
+        df_viz["otif_atendido"] = (
+        raw_ofensor.isna() 
+        | (cleaned_ofensor == "") 
+        | (cleaned_ofensor == "0") 
+        | cleaned_ofensor.str.lower().str.contains('otif atendido', na=False)
+    )
 
     else:
         # cenário sem OTIF → cria a coluna sempre False
@@ -881,6 +886,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
