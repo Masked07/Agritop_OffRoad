@@ -619,7 +619,7 @@ with aba1:
         # -----------------------
         # TOP 10 clientes prioritários (ordenado por quantidade de pedidos do material prioritário)
         # -----------------------
-        st.subheader("TOP 10 Clientes Agritop")
+        st.subheader("TOP 15 Clientes Agritop")
 
         # Preparar agregações necessárias para a tabela (defensivo quanto a nomes de colunas)
         cliente_name_col = razao_col if razao_col and razao_col in df_viz.columns else 'cliente_nome' if 'cliente_nome' in df_viz.columns else None
@@ -676,35 +676,54 @@ with aba1:
 
             # Para OTIF AGRITOP e OTIF Lubrificantes, tentar filtrar linhas específicas
             # OTIF AGRITOP
+            # OTIF AGRITOP
             if 'otif_atendido' in tmp.columns:
                 agr = tmp[tmp['material_norm'].isin([m.upper() for m in PRIORITY_MATERIALS])]
-                agr_agg = agr.groupby(client_col).agg(otif_agr = ('otif_atendido','mean')).reset_index().rename(columns={client_col:'codigo_sap'})
+                agr_agg = (
+                    agr.groupby(client_col)
+                       .agg(otif_agr=('otif_atendido', 'mean'))
+                       .reset_index()
+                       .rename(columns={client_col: 'codigo_sap'})
+                )
                 agr_agg['otif_agr'] = (agr_agg['otif_agr'] * 100).round(2)
+                agr_agg['otif_agr'] = agr_agg['otif_agr'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "-")
                 agg = agg.merge(agr_agg, on='codigo_sap', how='left')
             else:
-                agg['otif_agr'] = np.nan
-
-            # OTIF Lubrificantes
+                agg['otif_agr'] = "-"
+            
+            # OTIF LUBRIFICANTES
             if setor_col and 'otif_atendido' in tmp.columns and setor_col in tmp.columns:
                 lub = tmp[tmp[setor_col].str.contains('Lubrificantes', case=False, na=False)]
-                lub_agg = lub.groupby(client_col).agg(otif_lub = ('otif_atendido','mean')).reset_index().rename(columns={client_col:'codigo_sap'})
+                lub_agg = (
+                    lub.groupby(client_col)
+                       .agg(otif_lub=('otif_atendido', 'mean'))
+                       .reset_index()
+                       .rename(columns={client_col: 'codigo_sap'})
+                )
                 lub_agg['otif_lub'] = (lub_agg['otif_lub'] * 100).round(2)
+                lub_agg['otif_lub'] = lub_agg['otif_lub'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "-")
                 agg = agg.merge(lub_agg, on='codigo_sap', how='left')
             else:
-                agg['otif_lub'] = np.nan
-
-            # OTIF demais produtos (exclui prioritários)
+                agg['otif_lub'] = "-"
+          
+            # OTIF DEMAIS PRODUTOS
             if 'otif_atendido' in tmp.columns:
                 nonprio = tmp[~tmp['is_priority_mat']]
-                nonprio_agg = nonprio.groupby(client_col).agg(otif_nonprio = ('otif_atendido','mean')).reset_index().rename(columns={client_col:'codigo_sap'})
+                nonprio_agg = (
+                    nonprio.groupby(client_col)
+                           .agg(otif_nonprio=('otif_atendido', 'mean'))
+                           .reset_index()
+                           .rename(columns={client_col: 'codigo_sap'})
+                )
                 nonprio_agg['otif_nonprio'] = (nonprio_agg['otif_nonprio'] * 100).round(2)
+                nonprio_agg['otif_nonprio'] = nonprio_agg['otif_nonprio'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "-")
                 agg = agg.merge(nonprio_agg, on='codigo_sap', how='left')
             else:
-                agg['otif_nonprio'] = np.nan
+                agg['otif_nonprio'] = "-"
 
             # formatar e ordenar por qtd_prioritarios
             agg['qtd_prioritarios'] = agg['qtd_prioritarios'].fillna(0).astype(int)
-            agg = agg.sort_values('qtd_prioritarios', ascending=False).head(10)
+            agg = agg.sort_values('qtd_prioritarios', ascending=False).head(15)
 
             # renomear colunas finais conforme solicitado
             display_cols = {
@@ -886,6 +905,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
