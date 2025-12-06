@@ -796,7 +796,7 @@ with col2:
         pie2,
         names="categoria",
         values="quantidade",
-        title="Distribuição — Demais Materiais"
+        title="Distribuição — Demais Materiais",
         color="categoria",  # importantíssimo
       color_discrete_sequence=custom_colors
     )
@@ -909,6 +909,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
