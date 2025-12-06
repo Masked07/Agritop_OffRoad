@@ -480,6 +480,45 @@ with aba1:
     st.header("Visão Gerencial — Produtos Claros")
 
     df_viz = df_prior.copy()
+    # 1. Encontrar coluna de ofensor no df_otif
+    ofensor_col = None
+    if df_otif is not None:
+        ofensor_col = next((c for c in df_otif.columns if "ofensor" in c.lower()), None)
+
+    # 2. Padronizar chave nas duas bases
+    df_viz["ordem_de_venda"] = df_viz["ordem_de_venda"].astype(str).str.strip().str.upper()
+    if df_otif is not None and "ordem_de_venda" in df_otif.columns:
+        df_otif["ordem_de_venda"] = df_otif["ordem_de_venda"].astype(str).str.strip().str.upper()
+
+    # 3. Merge defensivo
+    if df_otif is not None and ofensor_col:
+
+        # pegar somente colunas relevantes
+        otif_pick = [
+            c for c in ["ordem_de_venda", ofensor_col, "data_prevista_entrega"]
+            if c in df_otif.columns
+        ]
+        df_otif_small = df_otif[otif_pick].copy()
+
+        # merge com df_viz
+        df_viz = df_viz.merge(
+            df_otif_small,
+            on="ordem_de_venda",
+            how="left",
+            suffixes=("", "_otif")
+        )
+
+        # normalizar ofensor
+        raw_ofensor = df_viz.get(ofensor_col)
+        cleaned_ofensor = raw_ofensor.fillna("").astype(str).str.strip()
+        df_viz[ofensor_col] = cleaned_ofensor
+
+        # regra de OTIF atendido
+        df_viz["otif_atendido"] = cleaned_ofensor.str.lower().str.contains('otif atendido', na=False)
+
+    else:
+        # cenário sem OTIF → cria a coluna sempre False
+        df_viz["otif_atendido"] = False
 
     # detectar colunas usadas nos filtros
     remessa_candidates = [c for c in df_viz.columns if 'remessa' in c.lower()]
@@ -842,6 +881,7 @@ with col2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
