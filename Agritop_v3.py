@@ -808,112 +808,113 @@ with col2:
 
     st.plotly_chart(fig2, use_container_width=True)
 
-    # with aba2:
-    #     st.header("Visão Operacional — Produtos Claros")   
+    with aba2:
+        st.header("Visão Operacional — Produtos Claros")   
 
-    #     # -----------------------------
-    #     # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_view
-    #     # -----------------------------
-    #     # Contagem de clientes prioritários (qualquer pedido de material prioritário)
-    #     total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
+        # -----------------------------
+        # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_view
+        # -----------------------------
+        # Contagem de clientes prioritários (qualquer pedido de material prioritário)
+        total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
 
-    #     # Total de ordens de venda e OTIF continuam usando df_view filtrado
-    #     total_ov_view = df_view['ordem_de_venda'].nunique()
-    #     perc_otif_view = df_view['otif_atendido'].mean() * 100 if len(df_view) > 0 else 0
+        # Total de ordens de venda e OTIF continuam usando df_view filtrado
+        total_ov_view = df_view['ordem_de_venda'].nunique()
+        perc_otif_view = df_view['otif_atendido'].mean() * 100 if len(df_view) > 0 else 0
 
-    #     # Exibir métricas
-    #     kc1, kc2, kc3 = st.columns(3)
-    #     kc1.metric('Clientes Agritop / Off Road', int(total_clientes_prioritarios))
-    #     kc2.metric('Total de Ordens de Venda (Exceto Agritop / Off Road)', int(total_ov_view))
-    #     kc3.metric('OTIF (%)', f"{perc_otif_view:,.2f}%")
+        # Exibir métricas
+        kc1, kc2, kc3 = st.columns(3)
+        kc1.metric('Clientes Agritop / Off Road', int(total_clientes_prioritarios))
+        kc2.metric('Total de Ordens de Venda (Exceto Agritop / Off Road)', int(total_ov_view))
+        kc3.metric('OTIF (%)', f"{perc_otif_view:,.2f}%")
 
-    #     # -----------------------------
-    #     # Filtros: Base e Diretoria N2
-    #     # -----------------------------
-    #     st.subheader('Filtros')
-    #     f1, f2 = st.columns(2)
-    #     base_col = next((c for c in df_view.columns if 'base' == c or 'base' in c.lower()), None)
-    #     dir_n2_col = n2_col
+        # -----------------------------
+        # Filtros: Base e Diretoria N2
+        # -----------------------------
+        st.subheader('Filtros')
+        f1, f2 = st.columns(2)
+        base_col = next((c for c in df_view.columns if 'base' == c or 'base' in c.lower()), None)
+        dir_n2_col = n2_col
 
-    #     sel_base = None
-    #     sel_n2 = None
-    #     df_filtered = df_view.copy()
-    #     if base_col is not None:
-    #         sel_base = f1.multiselect('Base', options=sorted(df_view[base_col].dropna().unique().tolist()), default=None)
-    #         if sel_base:
-    #             df_filtered = df_filtered[df_filtered[base_col].isin(sel_base)]
-    #     if dir_n2_col is not None:
-    #         sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_view[dir_n2_col].dropna().unique().tolist()), default=None)
-    #         if sel_n2:
-    #             df_filtered = df_filtered[df_filtered[dir_n2_col].isin(sel_n2)]
+        sel_base = None
+        sel_n2 = None
+        df_filtered = df_view.copy()
+        if base_col is not None:
+            sel_base = f1.multiselect('Base', options=sorted(df_view[base_col].dropna().unique().tolist()), default=None)
+            if sel_base:
+                df_filtered = df_filtered[df_filtered[base_col].isin(sel_base)]
+        if dir_n2_col is not None:
+            sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_view[dir_n2_col].dropna().unique().tolist()), default=None)
+            if sel_n2:
+                df_filtered = df_filtered[df_filtered[dir_n2_col].isin(sel_n2)]
 
-    #     # -----------------------------
-    #     # Tabela final com colunas solicitadas
-    #     # -----------------------------
-    #     st.subheader('Tabela filtrada — Prioritários (Exceto Agritop / Off Road)')
+        # -----------------------------
+        # Tabela final com colunas solicitadas
+        # -----------------------------
+        st.subheader('Tabela filtrada — Prioritários (Exceto Agritop / Off Road)')
 
-    #     cols_to_show = [client_col]
-    #     if razao_col:
-    #         cols_to_show.append(razao_col)
-    #     cols_to_show += ['ordem_de_venda', material_col, 'status_check']
+        cols_to_show = [client_col]
+        if razao_col:
+            cols_to_show.append(razao_col)
+        cols_to_show += ['ordem_de_venda', material_col, 'status_check']
 
-    #     # proteger se colausente
-    #     cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
+        # proteger se colausente
+        cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
 
-    #     st.dataframe(df_filtered[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
+        st.dataframe(df_filtered[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
 
-    #     # ----------------------------
-    #     # Distribuição por status (global)
-    #     # ----------------------------
-    #     st.subheader('Distribuição por Status Check')
-    #     fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
-    #     st.plotly_chart(fig_status, use_container_width=True)
+        # ----------------------------
+        # Distribuição por status (global)
+        # ----------------------------
+        st.subheader('Distribuição por Status Check')
+        fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
+        st.plotly_chart(fig_status, use_container_width=True)
 
-    #     # ----------------------------
-    #     # Tabela completa e Export
-    #     # ----------------------------
-    #     st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
-    #     statuses = df_prior['status_check'].dropna().unique().tolist()
-    #     sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
-    #     sel_base_tbl = None
-    #     if 'base' in df_prior.columns:
-    #         sel_base_tbl = st.multiselect('Base (tabela)', options=sorted(df_prior['base'].dropna().unique().tolist()), default=None)
+        # ----------------------------
+        # Tabela completa e Export
+        # ----------------------------
+        st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
+        statuses = df_prior['status_check'].dropna().unique().tolist()
+        sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
+        sel_base_tbl = None
+        if 'base' in df_prior.columns:
+            sel_base_tbl = st.multiselect('Base (tabela)', options=sorted(df_prior['base'].dropna().unique().tolist()), default=None)
 
-    #     # preparar df_view for table
+        # preparar df_view for table
 
-    #     df_table = df_prior.copy()
-    #     if sel_status:
-    #         df_table = df_table[df_table['status_check'].isin(sel_status)]
-    #     if sel_base_tbl:
-    #         df_table = df_table[df_table['base'].isin(sel_base_tbl)]
+        df_table = df_prior.copy()
+        if sel_status:
+            df_table = df_table[df_table['status_check'].isin(sel_status)]
+        if sel_base_tbl:
+            df_table = df_table[df_table['base'].isin(sel_base_tbl)]
 
-    #     default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
-    #     show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
-    #     st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
+        default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
+        show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
+        st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
 
-    #     # Export
-    #     st.subheader('Exportar resultados')
-    #     if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
-    #         written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
-    #         if written:
-    #             st.success(f"{len(written)} arquivos gerados.")
-    #             zip_buf = make_zip(written)
-    #             st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
-    #         else:
-    #             st.warning('Nenhum arquivo foi escrito.')
+        # Export
+        st.subheader('Exportar resultados')
+        if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
+            written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
+            if written:
+                st.success(f"{len(written)} arquivos gerados.")
+                zip_buf = make_zip(written)
+                st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
+            else:
+                st.warning('Nenhum arquivo foi escrito.')
 
-    #     # download consolidado
-    #     to_xlsx = io.BytesIO()
-    #     with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
-    #         df_table.to_excel(writer, sheet_name='prioritarios', index=False)
-    #     to_xlsx.seek(0)
-    #     st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # download consolidado
+        to_xlsx = io.BytesIO()
+        with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
+            df_table.to_excel(writer, sheet_name='prioritarios', index=False)
+        to_xlsx.seek(0)
+        st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     # st.markdown("""
     # **Observações**
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
