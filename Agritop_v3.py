@@ -812,14 +812,14 @@ with aba2:
     st.header("Visão Operacional — Produtos Claros")   
 
     # -----------------------------
-    # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_view
+    # KPIs gerais (clientes distintos, total OV, %OTIF) — com base no df_viz
     # -----------------------------
     # Contagem de clientes prioritários (qualquer pedido de material prioritário)
     total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
 
-    # Total de ordens de venda e OTIF continuam usando df_view filtrado
-    total_ov_view = df_view['ordem_de_venda'].nunique()
-    perc_otif_view = df_view['otif_atendido'].mean() * 100 if len(df_view) > 0 else 0
+    # Total de ordens de venda e OTIF continuam usando df_viz filtrado
+    total_ov_view = df_viz['ordem_de_venda'].nunique()
+    perc_otif_view = df_viz['otif_atendido'].mean() * 100 if len(df_viz) > 0 else 0
 
     # Exibir métricas
     kc1, kc2, kc3 = st.columns(3)
@@ -832,18 +832,18 @@ with aba2:
     # -----------------------------
     st.subheader('Filtros')
     f1, f2 = st.columns(2)
-    base_col = next((c for c in df_view.columns if 'base' == c or 'base' in c.lower()), None)
+    base_col = next((c for c in df_viz.columns if 'base' == c or 'base' in c.lower()), None)
     dir_n2_col = n2_col
 
     sel_base = None
     sel_n2 = None
-    df_filtered = df_view.copy()
+    df_filtered = df_viz.copy()
     if base_col is not None:
-        sel_base = f1.multiselect('Base', options=sorted(df_view[base_col].dropna().unique().tolist()), default=None)
+        sel_base = f1.multiselect('Base', options=sorted(df_viz[base_col].dropna().unique().tolist()), default=None)
         if sel_base:
             df_filtered = df_filtered[df_filtered[base_col].isin(sel_base)]
     if dir_n2_col is not None:
-        sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_view[dir_n2_col].dropna().unique().tolist()), default=None)
+        sel_n2 = f2.multiselect('Diretoria N2', options=sorted(df_viz[dir_n2_col].dropna().unique().tolist()), default=None)
         if sel_n2:
             df_filtered = df_filtered[df_filtered[dir_n2_col].isin(sel_n2)]
 
@@ -879,7 +879,7 @@ with aba2:
     if 'base' in df_prior.columns:
         sel_base_tbl = st.multiselect('Base (tabela)', options=sorted(df_prior['base'].dropna().unique().tolist()), default=None)
 
-    # preparar df_view for table
+    # preparar df_viz for table
 
     df_table = df_prior.copy()
     if sel_status:
@@ -914,6 +914,7 @@ with aba2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
