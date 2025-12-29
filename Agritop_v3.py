@@ -818,7 +818,7 @@ with aba2:
     total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
 
     # Total de ordens de venda e OTIF continuam usando df_viz filtrado
-    total_ov_view = df_viz['ordem_de_venda']
+    total_ov_view = df_viz['ordem_de_venda'].nunique()
     perc_otif_view = df_viz['otif_atendido'].mean() * 100 if len(df_viz) > 0 else 0
 
     # Exibir métricas
@@ -901,7 +901,7 @@ with aba2:
     # Agrupar corretamente (OVs únicas por dia)
     df_grouped = (
         df_chart
-        .groupby(['data_ov', 'tipo_prioridade'])['ordem_de_venda']
+        .groupby(['data_col', 'tipo_prioridade'])['ordem_de_venda']
         .nunique()
         .reset_index(name='qtd_ovs')
     )
@@ -909,7 +909,7 @@ with aba2:
     # Pivotar para formato de gráfico
     df_pivot = (
         df_grouped
-        .pivot(index='data_ov', columns='tipo_prioridade', values='qtd_ovs')
+        .pivot(index='data_col', columns='tipo_prioridade', values='qtd_ovs')
         .fillna(0)
         .sort_index()
     )
@@ -925,6 +925,7 @@ with aba2:
     # Distribuição por status (global)
     # ----------------------------
     st.subheader('Distribuição por Status Check')
+    df_prior = df_priorid.copy()  
     fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
     st.plotly_chart(fig_status, use_container_width=True)
 
@@ -973,6 +974,7 @@ with aba2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
