@@ -898,7 +898,7 @@ with aba2:
     date_col = next(
         (
             c for c in df_chart.columns
-            if 'criação' in c.lower() and 'ov' in c.lower()
+            if 'criacao' in c.lower() and 'ov' in c.lower()
         ),
         None
     )
@@ -1003,6 +1003,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
