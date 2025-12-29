@@ -866,72 +866,72 @@ with aba2:
 
     st.dataframe(df_nonpriorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
 
-      st.subheader('Tabela filtrada — Prioritários (Agritop / Off Road)')
+    st.subheader('Tabela filtrada — Prioritários (Agritop / Off Road)')
   
-      cols_to_show = [client_col]
-      if razao_col:
-          cols_to_show.append(razao_col)
-      cols_to_show += ['ordem_de_venda', material_col, 'status_check']
+    cols_to_show = [client_col]
+    if razao_col:
+        cols_to_show.append(razao_col)
+    cols_to_show += ['ordem_de_venda', material_col, 'status_check']
   
-      # proteger se colausente
-      cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
+    # proteger se colausente
+    cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
   
-      df_priorid = df_filtered[
-          df_filtered[material_col].isin(PRIORITY_MATERIALS)
-      ]  
+    df_priorid = df_filtered[
+        df_filtered[material_col].isin(PRIORITY_MATERIALS)
+    ]  
   
-      st.dataframe(df_priorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
-
-      # Garantir datetime
-      df_chart = df_filtered.copy()
-      df_chart['data_ov'] = pd.to_datetime(
-          df_chart['Data Hora Criação da OV (calendário)'],
-          errors='coerce'
-      ).dt.date  # força granularidade diária
-      
-      # Normalizar materiais prioritários
-      priority_upper = [m.upper().strip() for m in PRIORITY_MATERIALS]
-      
-      df_chart['tipo_prioridade'] = df_chart[material_col] \
-          .str.upper() \
-          .str.strip() \
-          .isin(priority_upper) \
-          .map({True: 'Prioritário', False: 'Não prioritário'})
-      
-      # Agrupar corretamente (OVs únicas por dia)
-      df_grouped = (
-          df_chart
-          .groupby(['data_col', 'tipo_prioridade'])['ordem_de_venda']
-          .nunique()
-          .reset_index(name='qtd_ovs')
-      )
-      
-      # Pivotar para formato de gráfico
-      df_pivot = (
-          df_grouped
-          .pivot(index='data_col', columns='tipo_prioridade', values='qtd_ovs')
-          .fillna(0)
-          .sort_index()
-      )
-      
-      st.subheader('Entrada diária de pedidos — Prioritários vs Não Prioritários')
-      
-      st.line_chart(
-          df_pivot,
-          use_container_width=True
-      )
+    st.dataframe(df_priorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
   
-      # ----------------------------
-      # Distribuição por status (global)
-      # ----------------------------
-      st.subheader('Distribuição por Status Check')
-      df_prior = df_priorid.copy()  
-      fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
-      st.plotly_chart(fig_status, use_container_width=True)
+    # Garantir datetime
+    df_chart = df_filtered.copy()
+    df_chart['data_ov'] = pd.to_datetime(
+        df_chart['Data Hora Criação da OV (calendário)'],
+        errors='coerce'
+    ).dt.date  # força granularidade diária
+    
+    # Normalizar materiais prioritários
+    priority_upper = [m.upper().strip() for m in PRIORITY_MATERIALS]
+    
+    df_chart['tipo_prioridade'] = df_chart[material_col] \
+        .str.upper() \
+        .str.strip() \
+        .isin(priority_upper) \
+        .map({True: 'Prioritário', False: 'Não prioritário'})
+    
+    # Agrupar corretamente (OVs únicas por dia)
+    df_grouped = (
+        df_chart
+        .groupby(['data_col', 'tipo_prioridade'])['ordem_de_venda']
+        .nunique()
+        .reset_index(name='qtd_ovs')
+    )
+    
+    # Pivotar para formato de gráfico
+    df_pivot = (
+        df_grouped
+        .pivot(index='data_col', columns='tipo_prioridade', values='qtd_ovs')
+        .fillna(0)
+        .sort_index()
+    )
+    
+    st.subheader('Entrada diária de pedidos — Prioritários vs Não Prioritários')
+    
+    st.line_chart(
+        df_pivot,
+        use_container_width=True
+    )
   
-      # ----------------------------
-    # Tabela completa e Export
     # ----------------------------
+    # Distribuição por status (global)
+    # ----------------------------
+    st.subheader('Distribuição por Status Check')
+    df_prior = df_priorid.copy()  
+    fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
+    st.plotly_chart(fig_status, use_container_width=True)
+  
+    # ----------------------------
+  # Tabela completa e Export
+  # ----------------------------
     st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
     statuses = df_prior['status_check'].dropna().unique().tolist()
     sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
@@ -941,39 +941,40 @@ with aba2:
 
     # preparar df_viz for table
 
-    df_table = df_prior.copy()
-    if sel_status:
-        df_table = df_table[df_table['status_check'].isin(sel_status)]
-    if sel_base_tbl:
-        df_table = df_table[df_table['base'].isin(sel_base_tbl)]
+  df_table = df_prior.copy()
+  if sel_status:
+      df_table = df_table[df_table['status_check'].isin(sel_status)]
+  if sel_base_tbl:
+      df_table = df_table[df_table['base'].isin(sel_base_tbl)]
 
-    default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
-    show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
-    st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
+  default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
+  show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
+  st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
 
-    # Export
-    st.subheader('Exportar resultados')
-    if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
-        written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
-        if written:
-            st.success(f"{len(written)} arquivos gerados.")
-            zip_buf = make_zip(written)
-            st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
-        else:
-            st.warning('Nenhum arquivo foi escrito.')
+  # Export
+  st.subheader('Exportar resultados')
+  if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
+      written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
+      if written:
+          st.success(f"{len(written)} arquivos gerados.")
+          zip_buf = make_zip(written)
+          st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
+      else:
+          st.warning('Nenhum arquivo foi escrito.')
 
-    # download consolidado
-    to_xlsx = io.BytesIO()
-    with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
-        df_table.to_excel(writer, sheet_name='prioritarios', index=False)
-    to_xlsx.seek(0)
-    st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  # download consolidado
+  to_xlsx = io.BytesIO()
+  with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
+      df_table.to_excel(writer, sheet_name='prioritarios', index=False)
+  to_xlsx.seek(0)
+  st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-    # st.markdown("""
-    # **Observações**
-    # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
-    # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
-    # """)
+  # st.markdown("""
+  # **Observações**
+  # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
+  # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
+  # """)
+
 
 
 
