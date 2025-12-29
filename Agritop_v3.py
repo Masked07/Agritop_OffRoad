@@ -941,39 +941,40 @@ with aba2:
 
     # preparar df_viz for table
 
-  df_table = df_prior.copy()
-  if sel_status:
-      df_table = df_table[df_table['status_check'].isin(sel_status)]
-  if sel_base_tbl:
-      df_table = df_table[df_table['base'].isin(sel_base_tbl)]
+    df_table = df_prior.copy()
+    if sel_status:
+        df_table = df_table[df_table['status_check'].isin(sel_status)]
+    if sel_base_tbl:
+        df_table = df_table[df_table['base'].isin(sel_base_tbl)]
+  
+    default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
+    show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
+    st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
+  
+    # Export
+    st.subheader('Exportar resultados')
+    if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
+        written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
+        if written:
+            st.success(f"{len(written)} arquivos gerados.")
+            zip_buf = make_zip(written)
+            st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
+        else:
+            st.warning('Nenhum arquivo foi escrito.')
+  
+    # download consolidado
+    to_xlsx = io.BytesIO()
+    with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
+        df_table.to_excel(writer, sheet_name='prioritarios', index=False)
+    to_xlsx.seek(0)
+    st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  
+    # st.markdown("""
+    # **Observações**
+    # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
+    # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
+    # """)
 
-  default_show = [client_col, 'ordem_de_venda', material_col, 'status_check']
-  show_cols = st.multiselect('Colunas a exibir', options=df_table.columns.tolist(), default=[c for c in default_show if c in df_table.columns])
-  st.dataframe(df_table[show_cols].reset_index(drop=True), use_container_width=True)
-
-  # Export
-  st.subheader('Exportar resultados')
-  if st.button('Exportar XLSX por Código SAP (gera arquivos em ./exports/<YYYY-MM-DD>/)'):
-      written = export_by_sapcode(df_table, sap_col if sap_col in df_table.columns else 'ordem_de_venda')
-      if written:
-          st.success(f"{len(written)} arquivos gerados.")
-          zip_buf = make_zip(written)
-          st.download_button('Baixar ZIP dos arquivos exportados', data=zip_buf, file_name=f"exports_{datetime.now().strftime('%Y%m%d')}.zip", mime='application/zip')
-      else:
-          st.warning('Nenhum arquivo foi escrito.')
-
-  # download consolidado
-  to_xlsx = io.BytesIO()
-  with pd.ExcelWriter(to_xlsx, engine='openpyxl') as writer:
-      df_table.to_excel(writer, sheet_name='prioritarios', index=False)
-  to_xlsx.seek(0)
-  st.download_button('Baixar planilha consolidada (XLSX)', data=to_xlsx, file_name='prioritarios_consolidados.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-  # st.markdown("""
-  # **Observações**
-  # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
-  # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
-  # """)
 
 
 
