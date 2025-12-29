@@ -901,7 +901,7 @@ with aba2:
     # Agrupar corretamente (OVs únicas por dia)
     df_grouped = (
         df_chart
-        .groupby(['data_col', 'tipo_prioridade'])['ordem_de_venda']
+        .groupby(['data_ov', 'tipo_prioridade'])['ordem_de_venda']
         .nunique()
         .reset_index(name='qtd_ovs')
     )
@@ -909,7 +909,7 @@ with aba2:
     # Pivotar para formato de gráfico
     df_pivot = (
         df_grouped
-        .pivot(index='data_col', columns='tipo_prioridade', values='qtd_ovs')
+        .pivot(index='data_ov', columns='tipo_prioridade', values='qtd_ovs')
         .fillna(0)
         .sort_index()
     )
@@ -973,6 +973,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
