@@ -928,10 +928,9 @@ with aba2:
     df_prior = df_priorid.copy()  
     fig_status = px.histogram(df_prior, x='status_check', title='Status dos pedidos', labels={'status_check': 'Status'}, text_auto=True, color_discrete_sequence=[COLORS['verde_escuro']])
     st.plotly_chart(fig_status, use_container_width=True)
-  
     # ----------------------------
-  # Tabela completa e Export
-  # ----------------------------
+    # Tabela completa e Export
+    # ----------------------------
     st.subheader('Tabela filtrada — Prioritários (com filtros aplicáveis)')
     statuses = df_prior['status_check'].dropna().unique().tolist()
     sel_status = st.multiselect('Status', options=sorted(statuses), default=sorted(statuses))
@@ -974,6 +973,7 @@ with aba2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
