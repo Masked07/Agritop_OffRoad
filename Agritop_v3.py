@@ -882,23 +882,54 @@ with aba2:
   
     st.dataframe(df_priorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
   
-    # Garantir datetime
-    df_chart = df_filtered.copy()
-    df_chart['data_ov'] = pd.to_datetime(
-        df_chart['Data Hora Criação da OV (calendário)'],
-        errors='coerce'
-    ).dt.date  # força granularidade diária
+    # ----------------------------
+    # DF exclusivo para gráfico de entrada diária
+    # ----------------------------
+    df_chart = df_main.copy()
     
-    # Normalizar materiais prioritários
+    # aplicar filtros da tela (se existirem)
+    if base_col and sel_base:
+        df_chart = df_chart[df_chart[base_col].isin(sel_base)]
+    
+    if dir_n2_col and sel_n2:
+        df_chart = df_chart[df_chart[dir_n2_col].isin(sel_n2)]
+    
+    # localizar coluna de data de criação da OV
+    date_col = next(
+        (
+            c for c in df_chart.columns
+            if 'criação' in c.lower() and 'ov' in c.lower()
+        ),
+        None
+    )
+    
+    if date_col is None:
+        st.error('Coluna de data de criação da OV não encontrada para o gráfico.')
+        st.stop()
+    
+    # garantir datetime (granularidade diária)
+    df_chart['data_ov'] = pd.to_datetime(
+        df_chart[date_col],
+        errors='coerce'
+    ).dt.date
+    
+    # ----------------------------
+    # Classificar prioridade
+    # ----------------------------
     priority_upper = [m.upper().strip() for m in PRIORITY_MATERIALS]
     
-    df_chart['tipo_prioridade'] = df_chart[material_col] \
-        .str.upper() \
-        .str.strip() \
-        .isin(priority_upper) \
+    df_chart['tipo_prioridade'] = (
+        df_chart[material_col]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .isin(priority_upper)
         .map({True: 'Prioritário', False: 'Não prioritário'})
+    )
     
-    # Agrupar corretamente (OVs únicas por dia)
+    # ----------------------------
+    # Agrupar OVs únicas por dia
+    # ----------------------------
     df_grouped = (
         df_chart
         .groupby(['data_ov', 'tipo_prioridade'])['ordem_de_venda']
@@ -906,7 +937,9 @@ with aba2:
         .reset_index(name='qtd_ovs')
     )
     
-    # Pivotar para formato de gráfico
+    # ----------------------------
+    # Pivotar para visualização
+    # ----------------------------
     df_pivot = (
         df_grouped
         .pivot(index='data_ov', columns='tipo_prioridade', values='qtd_ovs')
@@ -915,11 +948,8 @@ with aba2:
     )
     
     st.subheader('Entrada diária de pedidos — Prioritários vs Não Prioritários')
-    
-    st.line_chart(
-        df_pivot,
-        use_container_width=True
-    )
+    st.line_chart(df_pivot, use_container_width=True)
+
   
     # ----------------------------
     # Distribuição por status (global)
@@ -973,6 +1003,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
