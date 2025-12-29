@@ -818,13 +818,13 @@ with aba2:
     total_clientes_prioritarios = df_main[df_main['is_priority_material']][client_col].nunique()
 
     # Total de ordens de venda e OTIF continuam usando df_viz filtrado
-    total_ov_view = df_viz['ordem_de_venda'].nunique()
+    total_ov_view = df_viz['ordem_de_venda']
     perc_otif_view = df_viz['otif_atendido'].mean() * 100 if len(df_viz) > 0 else 0
 
     # Exibir métricas
     kc1, kc2, kc3 = st.columns(3)
     kc1.metric('Clientes Agritop / Off Road', int(total_clientes_prioritarios))
-    kc2.metric('Total de Ordens de Venda (Exceto Agritop / Off Road)', int(total_ov_view))
+    kc2.metric('Total de Ordens de Venda', int(total_ov_view))
     kc3.metric('OTIF (%)', f"{perc_otif_view:,.2f}%")
 
     # -----------------------------
@@ -860,7 +860,66 @@ with aba2:
     # proteger se colausente
     cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
 
-    st.dataframe(df_filtered[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
+    df_nonpriorid = df_filtered[
+        ~df_filtered[material_col].isin(PRIORITY_MATERIALS)
+    ]  
+
+    st.dataframe(df_nonpriorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
+
+    st.subheader('Tabela filtrada — Prioritários (Agritop / Off Road)')
+
+    cols_to_show = [client_col]
+    if razao_col:
+        cols_to_show.append(razao_col)
+    cols_to_show += ['ordem_de_venda', material_col, 'status_check']
+
+    # proteger se colausente
+    cols_to_show = [c for c in cols_to_show if c in df_filtered.columns]
+
+    df_priorid = df_filtered[
+        df_filtered[material_col].isin(PRIORITY_MATERIALS)
+    ]  
+
+    st.dataframe(df_priorid[cols_to_show].drop_duplicates().reset_index(drop=True), use_container_width=True)
+
+    # Garantir datetime
+    df_chart = df_filtered.copy()
+    df_chart['data_ov'] = pd.to_datetime(
+        df_chart['Data Hora Criação da OV (calendário)'],
+        errors='coerce'
+    ).dt.date  # força granularidade diária
+    
+    # Normalizar materiais prioritários
+    priority_upper = [m.upper().strip() for m in PRIORITY_MATERIALS]
+    
+    df_chart['tipo_prioridade'] = df_chart[material_col] \
+        .str.upper() \
+        .str.strip() \
+        .isin(priority_upper) \
+        .map({True: 'Prioritário', False: 'Não prioritário'})
+    
+    # Agrupar corretamente (OVs únicas por dia)
+    df_grouped = (
+        df_chart
+        .groupby(['data_ov', 'tipo_prioridade'])['ordem_de_venda']
+        .nunique()
+        .reset_index(name='qtd_ovs')
+    )
+    
+    # Pivotar para formato de gráfico
+    df_pivot = (
+        df_grouped
+        .pivot(index='data_ov', columns='tipo_prioridade', values='qtd_ovs')
+        .fillna(0)
+        .sort_index()
+    )
+    
+    st.subheader('Entrada diária de pedidos — Prioritários vs Não Prioritários')
+    
+    st.line_chart(
+        df_pivot,
+        use_container_width=True
+    )
 
     # ----------------------------
     # Distribuição por status (global)
@@ -914,6 +973,7 @@ with aba2:
     # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # """)
+
 
 
 
