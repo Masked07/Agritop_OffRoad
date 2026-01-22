@@ -559,12 +559,36 @@ with aba1:
             if months_lbl:
                 sel = st.selectbox("Mês", months_lbl, index=len(months_lbl)-1)
                 selected_month = int(sel.split(" - ")[0])
+                   # Data limite (até X)
+    if data_remessa_col and selected_year and selected_month:
+        datas_mes = df_viz[
+            (df_viz[data_remessa_col].dt.year == selected_year) &
+            (df_viz[data_remessa_col].dt.month == selected_month)
+        ][data_remessa_col].dropna()
+    
+        if not datas_mes.empty:
+            data_min = datas_mes.min().date()
+            data_max = datas_mes.max().date()
+    
+            selected_end_date = st.date_input(
+                "Pedidos até a data",
+                value=data_max,
+                min_value=data_min,
+                max_value=data_max
+            )
+        else:
+            selected_end_date = None
+    else:
+        selected_end_date = None
+       
 
     # Aplicar filtros
     if data_remessa_col and selected_year:
         df_viz = df_viz[df_viz[data_remessa_col].dt.year == selected_year]
     if data_remessa_col and selected_month:
         df_viz = df_viz[df_viz[data_remessa_col].dt.month == selected_month]
+    if data_remessa_col and selected_end_date:
+        df_viz = df_viz[df_viz[data_remessa_col].dt.date <= selected_end_date]
     
     # -----------------------
     # RIGHT: KPIs (4 big numbers) + TOP10 TABELA
@@ -1003,6 +1027,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
