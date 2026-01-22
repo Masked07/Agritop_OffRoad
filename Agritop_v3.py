@@ -634,9 +634,9 @@ with aba1:
         # Display KPIs em 4 colunas
         b1, b2, b3, b4 = st.columns(4)
         b1.metric("Pedidos - Agritop", f"{total_pedidos_priority:,}")
-        b2.metric("OTIF - Agritop (%)", f"{perc_otif_prio:,.2f}%")
+        b2.metric("OTIF - Agritop", f"{perc_otif_prio:,.2f}%")
         b3.metric("Pedidos - Demais Produtos", f"{total_pedidos_nonpriority:,}")
-        b4.metric("OTIF - Demais Produtos (%)", f"{perc_otif_nonprio:,.2f}%")
+        b4.metric("OTIF - Demais Produtos", f"{perc_otif_nonprio:,.2f}%")
 
         st.markdown("---")
 
@@ -1027,6 +1027,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
