@@ -643,7 +643,7 @@ with aba1:
         # -----------------------
         # TOP 10 clientes prioritários (ordenado por quantidade de pedidos do material prioritário)
         # -----------------------
-        st.subheader("TOP 15 Clientes Agritop")
+        st.subheader("TOP 20 Clientes Agritop")
 
         # Preparar agregações necessárias para a tabela (defensivo quanto a nomes de colunas)
         cliente_name_col = razao_col if razao_col and razao_col in df_viz.columns else 'cliente_nome' if 'cliente_nome' in df_viz.columns else None
@@ -747,7 +747,7 @@ with aba1:
 
             # formatar e ordenar por qtd_prioritarios
             agg['qtd_prioritarios'] = agg['qtd_prioritarios'].fillna(0).astype(int)
-            agg = agg.sort_values('qtd_prioritarios', ascending=False).head(15)
+            agg = agg.sort_values('qtd_prioritarios', ascending=False).head(20)
 
             # renomear colunas finais conforme solicitado
             display_cols = {
@@ -1027,6 +1027,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
