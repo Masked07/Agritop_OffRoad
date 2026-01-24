@@ -681,6 +681,7 @@ with aba1:
             # agregações por cliente (codigo emissor)
             agg = tmp.groupby(client_col).agg(
                 cliente_nome = (cliente_name_col, 'first') if cliente_name_col and cliente_name_col in tmp.columns else (client_col, 'first'),
+                segmento = ('SEGMENTO', 'first') if 'SEGMENTO' in tmp.columns else (client_col, lambda _: '-'),
                 qtd_prioritarios = ('is_priority_mat', 'sum'),
                 qtd_etanol = ( 'tipo_combustivel', lambda s: (s.str.fullmatch('Etanol', case=False)).sum() if s.dtype == 'object' else 0),
                 qtd_gasolina = ( 'tipo_combustivel', lambda s: (s.str.fullmatch('Gasolina', case=False)).sum() if s.dtype == 'object' else 0),
@@ -752,6 +753,7 @@ with aba1:
             # renomear colunas finais conforme solicitado
             display_cols = {
                 'codigo_sap': 'Código',
+                'segmento': 'Segmento',
                 'cliente_nome': 'Cliente',
                 'qtd_prioritarios': 'Agritop',
                 'otif_agr': 'OTIF Agritop',
@@ -1027,6 +1029,7 @@ with aba2:
     # # - Filtra apenas clientes que compraram VIBRA AGRITOP ou Vibra Diesel Off-Road (clientes prioritários).
     # # - Dentro da visão gerencial, removemos esses materiais para analisar os demais pedidos desses clientes (Etanol/Gasolina/Diesel).
     # # """)
+
 
 
 
